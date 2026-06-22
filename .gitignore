@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# MAUI / Android
+*.apk
+*.aab
+*.ipa
+
+# SQLite database (user data, not source)
+*.db
+*.db3
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db

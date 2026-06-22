@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FlagsTrainer.ViewModels"
+             x:Class="FlagsTrainer.MainPage"
+             x:DataType="viewmodels:CountryListViewModel"
+             Title="FlagsTrainer">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="24">
+
+            <!-- ── LANGUAGE TOGGLE ──────────────────────────────────────────── -->
+            <Border Stroke="LightGray" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                        <Label Text="Język / Language" FontSize="12" TextColor="Gray" />
+                        <Label Text="{Binding LanguageLabel}" FontSize="18" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="{Binding LanguageLabel}"
+                            Command="{Binding ToggleLanguageCommand}"
+                            VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <!-- ── CONTINENT SELECTOR ───────────────────────────────────────── -->
+            <Label Text="Kontynent" FontSize="16" FontAttributes="Bold" />
+
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding ContinentOptions}" Spacing="10">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodels:ContinentOption">
+                            <!-- Each chip binds directly to its own SelectCommand and IsSelected -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    StrokeThickness="2"
+                                    Stroke="{Binding IsSelected, Converter={StaticResource BoolToSelectedBorderConverter}}"
+                                    Padding="18,10">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SelectCommand}"
+                                                          CommandParameter="{Binding EnumName}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="{Binding Label}"
+                                       FontSize="15"
+                                       FontAttributes="{Binding IsSelected, Converter={StaticResource BoolToFontAttributesConverter}}"
+                                       VerticalOptions="Center" />
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+
+            <!-- ── STUDY MODE ────────────────────────────────────────────────── -->
+            <Label Text="Tryb nauki" FontSize="16" FontAttributes="Bold" />
+
+            <!-- Mode 1: Flag → Country + Capital -->
+            <Border Stroke="{Binding ModeFlagToCountry, Converter={StaticResource BoolToSelectedBorderConverter}}"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectModeCommand}"
+                                          CommandParameter="FlagToCountry" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Label Grid.Column="0" Text="🚩" FontSize="28" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                        <Label Text="Flaga → Kraj i stolica" FontSize="16" FontAttributes="Bold" />
+                        <Label Text="Widzisz flagę, zgadujesz kraj i stolicę" FontSize="13" TextColor="Gray" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="2" Text="✓" FontSize="22" TextColor="#43A047"
+                           IsVisible="{Binding ModeFlagToCountry}" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Mode 2: Country → Flag + Capital -->
+            <Border Stroke="{Binding ModeCountryToFlag, Converter={StaticResource BoolToSelectedBorderConverter}}"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectModeCommand}"
+                                          CommandParameter="CountryToFlag" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Label Grid.Column="0" Text="🔤" FontSize="28" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                        <Label Text="Kraj → Flaga i stolica" FontSize="16" FontAttributes="Bold" />
+                        <Label Text="Widzisz nazwę kraju, zgadujesz flagę i stolicę" FontSize="13" TextColor="Gray" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="2" Text="✓" FontSize="22" TextColor="#43A047"
+                           IsVisible="{Binding ModeCountryToFlag}" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Mode 3: Capital → Flag + Country -->
+            <Border Stroke="{Binding ModeCapitalToCountry, Converter={StaticResource BoolToSelectedBorderConverter}}"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectModeCommand}"
+                                          CommandParameter="CapitalToCountry" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Label Grid.Column="0" Text="🏙️" FontSize="28" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                        <Label Text="Stolica → Flaga i kraj" FontSize="16" FontAttributes="Bold" />
+                        <Label Text="Widzisz stolicę, zgadujesz flagę i kraj" FontSize="13" TextColor="Gray" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="2" Text="✓" FontSize="22" TextColor="#43A047"
+                           IsVisible="{Binding ModeCapitalToCountry}" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <!-- ── START BUTTON ──────────────────────────────────────────────── -->
+            <Button Text="▶  Rozpocznij naukę"
+                    Command="{Binding StartLearningCommand}"
+                    FontSize="18"
+                    HeightRequest="56"
+                    Margin="0,8,0,0" />
+
+            <!-- ── RESET BUTTON ──────────────────────────────────────────────── -->
+            <Button Text="🔄  Resetuj postęp nauki"
+                    Command="{Binding ResetProgressCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="Gray"
+                    FontSize="14" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

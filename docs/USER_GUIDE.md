@@ -21,7 +21,7 @@ Poziomy pasek z przyciskami:
 
 | Przycisk | Co zawiera |
 |---|---|
-| 🌍 Wszystkie | Wszystkie ~196 krajów świata |
+| 🌐 Wszystkie | Wszystkie 196 krajów świata |
 | 🇪🇺 Europa | 46 krajów |
 | 🌍 Afryka | 54 kraje |
 | 🌏 Azja | 47 krajów |
@@ -29,7 +29,7 @@ Poziomy pasek z przyciskami:
 | 🌎 Ameryka Południowa | 12 krajów |
 | 🌊 Oceania | 14 krajów |
 
-Wybrany kontynent jest podświetlony fioletową ramką i pogrubionym tekstem.
+Można wybrać kilka kontynentów naraz (np. Europę i Azję) — wybrane są podświetlone niebieską ramką. Wybranie "Wszystkie" czyści pojedyncze zaznaczenia; odznaczenie ostatniego kontynentu wraca do "Wszystkie".
 
 ### 3. Tryb nauki
 Trzy sposoby uczenia się:

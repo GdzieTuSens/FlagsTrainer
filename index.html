@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flagi Świata – Fiszki</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main id="setup-screen">
+  <div class="card">
+    <h1 id="app-title">Flagi Świata</h1>
+
+    <div class="lang-row">
+      <span class="label" id="lang-label">Język</span>
+      <button id="lang-toggle" class="lang-btn"></button>
+    </div>
+
+    <h2 id="continent-heading">Kontynent</h2>
+    <div id="continent-chips" class="chip-row"></div>
+
+    <h2 id="mode-heading">Tryb nauki</h2>
+    <div id="mode-cards" class="mode-cards"></div>
+
+    <button id="start-btn" class="btn-primary">Rozpocznij naukę</button>
+    <button id="reset-btn" class="btn-text">Resetuj postęp nauki</button>
+  </div>
+</main>
+
+<main id="flashcard-screen" class="hidden">
+  <div id="progress-label" class="progress-label"></div>
+
+  <div id="flip-wrapper" class="flip-wrapper">
+    <div id="flip-inner" class="flip-inner">
+      <div class="flip-face flip-front">
+        <img id="front-flag" class="flag-img hidden" alt="">
+        <div id="front-text" class="big-text"></div>
+        <div id="front-hint" class="hint">Dotknij, aby odwrócić</div>
+      </div>
+      <div class="flip-face flip-back">
+        <img id="back-flag" class="flag-img hidden" alt="">
+        <div id="back-name" class="big-text"></div>
+        <div id="back-capital" class="hint"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="answer-buttons" class="buttons-row hidden">
+    <button id="wrong-btn" class="btn-danger">✗ Nie umiem</button>
+    <button id="know-btn" class="btn-success">✓ Umiem</button>
+  </div>
+
+  <button id="back-btn" class="btn-text">← Wróć do ustawień</button>
+</main>
+
+<script src="countries.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

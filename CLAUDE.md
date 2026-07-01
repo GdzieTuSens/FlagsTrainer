@@ -1,112 +1,80 @@
 # FlagsTrainer — Instrukcje dla Claude
 
 ## Czym jest ten projekt
-Aplikacja mobilna w **.NET MAUI** do nauki flag państw i ich stolic metodą fiszek (spaced repetition — system Leitnera). Użytkownik jest początkującym programistą C#; wyjaśniaj każdy krok prostym językiem po polsku, kod pisz po angielsku.
+Statyczna strona internetowa do nauki flag państw i ich stolic metodą fiszek (spaced repetition — system Leitnera). Hostowana na GitHub Pages. Użytkownik jest początkującym programistą (dotąd pisał w C#/.NET MAUI, teraz jest to prosty vanilla JS); wyjaśniaj każdy krok prostym językiem po polsku, kod pisz po angielsku.
 
 ## Stack technologiczny
-- **.NET 10 / MAUI** — multiplatformowa aplikacja (Android, iOS, Windows)
-- **CommunityToolkit.Mvvm 8.4.2** — MVVM z source generation (`[ObservableProperty]` jako `partial` property, `[RelayCommand]`)
-- **sqlite-net-pcl 1.9.172 + SQLitePCLRaw.bundle_green** — lokalna baza danych
-- **MAUI Preferences** — zapis ustawień (język, tryb, kontynent)
-- **flagcdn.com** — źródło flag PNG (w320, kod ISO = nazwa pliku)
+- **Czysty HTML5 / CSS3 / vanilla JavaScript (ES6+)** — bez frameworka, bez build step, bez npm
+- **localStorage** — zapis ustawień i postępu nauki (zamiast SQLite + MAUI Preferences z poprzedniej wersji)
+- **flagi PNG lokalne** w folderze `flags/` (skopiowane raz z oryginalnej apki MAUI — nie ładowane z internetu)
+- **GitHub Pages** — hosting wprost z root repo, branch `main`
 
-## Architektura (MVVM)
+## Architektura
 ```
-Views (XAML)  ←→  ViewModels  ←→  Services / Data
-MainPage.xaml      CountryListViewModel    DatabaseService (SQLite)
-FlashcardPage.xaml FlashcardViewModel      SettingsService (Preferences)
-                                           WorldCountries (dane statyczne)
+index.html  ←→  app.js (cała logika: state, render, Leitner, localStorage)
+style.css       (wygląd)
+countries.js    (dane: globalna tablica COUNTRIES)
 ```
+Jedna strona, dwa widoki (`#setup-screen`, `#flashcard-screen`) przełączane klasą `.hidden` — bez routingu, bez przeładowania strony.
 
 ## Struktura plików
 ```
 FlagsTrainer/
-├── CLAUDE.md                    ← ten plik
-├── FlagsTrainer.csproj
-├── MauiProgram.cs               ← rejestracja DI
-├── App.xaml / App.xaml.cs       ← rejestracja globalnych konwerterów
-├── AppShell.xaml.cs             ← nawigacja Shell + DI routing
-├── RouteFactory.cs              ← DependencyRouteFactory (Shell + DI)
-├── MainPage.xaml/.cs            ← ekran główny (wybór języka, kontynentu, trybu)
-├── FlashcardPage.xaml/.cs       ← ekran fiszek
-├── Models/
-│   ├── Country.cs               ← Name, NamePl, Capital, CapitalPl, IsoCode, Region, Continent
-│   ├── CardProgress.cs          ← rekord SQLite: Box (1-5), NextReview, CorrectCount, WrongCount
-│   ├── StudyMode.cs             ← enum: FlagToCountry, CountryToFlag, CapitalToCountry
-│   └── Continent.cs             ← enum + extensions (DisplayName, Emoji)
-├── Data/
-│   ├── WorldCountries.cs        ← agregator, GetAll() + GetByContinent()
-│   ├── EuropeanCountries.cs     ← 46 krajów
-│   ├── AfricanCountries.cs      ← 54 kraje
-│   ├── AsianCountries.cs        ← 47 krajów
-│   ├── NorthAmericanCountries.cs ← 23 kraje
-│   ├── SouthAmericanCountries.cs ← 12 krajów
-│   └── OceanianCountries.cs    ← 14 krajów
-├── ViewModels/
-│   ├── CountryListViewModel.cs  ← główny ekran + ContinentOption
-│   └── FlashcardViewModel.cs    ← logika fiszek + LeitnerBox
-├── Services/
-│   ├── DatabaseService.cs       ← SQLite CRUD + Leitner logic
-│   └── SettingsService.cs       ← Preferences (UsePolish, StudyMode, Continent)
-├── Converters/
-│   ├── BoolToSelectedBorderConverter.cs
-│   └── BoolToFontAttributesConverter.cs
-└── Resources/
-    └── Images/                  ← ~196 flag PNG (ISO-code.png, np. pl.png)
+├── CLAUDE.md               ← ten plik
+├── index.html              ← struktura DOM (setup-screen + flashcard-screen)
+├── style.css                ← cały styl, mobile-first
+├── app.js                   ← cała logika JS
+├── countries.js              ← const COUNTRIES = [...] (196 krajów)
+├── countries.json            ← te same dane w JSON (mirror)
+├── flags/                    ← 196 PNG flag, {isoCode}.png
+├── docs/
+│   ├── TECHNICAL.md          ← szczegóły implementacji
+│   └── USER_GUIDE.md         ← przewodnik dla użytkownika
+└── .vscode/                  ← (opcjonalnie ustawienia Live Server)
 ```
 
-## Jak działa Leitner (DatabaseService)
-- Skrzynki 1–5, interwały: [1, 2, 5, 11, 21] dni
-- **Umiem** → Box++ (max 5), NextReview = now + interval[Box]
-- **Nie umiem** → Box = 1, NextReview = now + 1 dzień
-- Sesja = tylko karty gdzie `NextReview <= DateTime.UtcNow`
-- Jeśli brak kart do dziś → wszystkie karty (żeby sesja nigdy nie była pusta)
+## Jak działa Leitner (`app.js`)
+- Skrzynki 1–5, interwały: `BOX_INTERVALS = [0, 1, 2, 5, 11, 21]` dni
+- **Umiem** → `markCorrect()`: box++ (max 5), `nextReview = now + interval[box]` dni
+- **Nie umiem** → `markWrong()`: box = 1, `nextReview = now + 1 dzień`
+- Sesja = tylko karty gdzie `nextReview <= Date.now()` (`getDueIsoCodes()`)
+- Jeśli brak kart do dziś → wszystkie karty (sesja nigdy nie jest pusta)
+- Postęp trzymany w `localStorage["flagstrainer_progress"]`, ustawienia w `localStorage["flagstrainer_settings"]`
 
-## Nawigacja
-```
-Shell → MainPage (CountryListViewModel)
-      → "flashcard?polish={bool}&mode={int}&continent={int}" → FlashcardPage
-```
-- `FlashcardViewModel` odbiera parametry przez `[QueryProperty]`
-- Czeka na 3 parametry (`_paramsReceived >= 3`) zanim uruchomi `InitializeAsync`
-
-## Rejestracja DI (MauiProgram.cs)
-- Singleton: `DatabaseService`, `SettingsService`, `App`
-- Transient: `FlashcardViewModel`, `FlashcardPage`, `CountryListViewModel`, `MainPage`
+## Dane krajów (`countries.js`)
+Każdy obiekt: `name, namePl, capital, capitalPl, isoCode, region, continent` (continent jako string: `Europe, Africa, Asia, NorthAmerica, SouthAmerica, Oceania`). Obraz flagi liczony jako `` `flags/${isoCode}.png` `` — nie jest polem danych.
 
 ## Co jest zaimplementowane
 - [x] Fiszki z 3 trybami (Flaga→Kraj, Kraj→Flaga, Stolica→Kraj)
-- [x] System Leitnera (5 skrzynek, interwały dni)
-- [x] SQLite — zapis postępu kart
+- [x] System Leitnera (5 skrzynek, interwały dni) w localStorage
 - [x] Wybór języka PL/EN (nazwy krajów + interfejs)
-- [x] Wybór kontynentu (Europa, Afryka, Azja, Ameryka Pn., Ameryka Pd., Oceania, Wszystkie)
-- [x] Reset postępu z potwierdzeniem
-- [x] 196 krajów, 196 flag PNG
-- [x] Statystyki sesji (✓ / ✗ w headerze)
+- [x] Wybór kontynentu (multi-select: Europa, Afryka, Azja, Ameryka Pn., Ameryka Pd., Oceania, Wszystkie)
+- [x] Reset postępu z potwierdzeniem (`confirm()`)
+- [x] 196 krajów, 196 flag PNG lokalnych
+- [x] Statystyki sesji (✓ / ✗ w nagłówku)
+- [x] Flip karty 3D (CSS `perspective` + `preserve-3d`)
+- [x] Responsywny layout mobile-first
 
 ## TODO (planowane etapy)
 - [ ] Ekran podsumowania sesji (zamiast cichego zapętlenia)
 - [ ] Tryb quiz (4 opcje do wyboru)
 - [ ] Statystyki globalne (skrzynki Leitnera, streak dzienny)
-- [ ] Animacja odwracania karty
 
 ## Zasady kodowania w tym projekcie
-- Wzorzec: MVVM z CommunityToolkit source generation
-- `[ObservableProperty]` zawsze jako `public partial Typ Nazwa { get; set; }` (AOT-safe)
-- Serwisy wstrzykiwane przez DI — nigdy `new SerwisXxx()` w kodzie
-- Kod po angielsku, rozmowy po polsku
+- Vanilla JS — żadnego frameworka, żadnego build step, żadnych zależności npm
 - Proste rozwiązania > sprytne; nie dodawaj funkcji których nie proszono
-- Konwertery rejestrowane w `App.xaml` jako `StaticResource`
+- Minimalne komentarze — tylko gdy WHY nie jest oczywiste (np. matematyka interwałów Leitnera, sztuczka z flip CSS)
+- Kod po angielsku (nazwy zmiennych/funkcji), rozmowy po polsku
+- Nazwy funkcji czytelne dla początkującego programisty
 
 ## Jak zbudować i uruchomić
 ```powershell
-# Windows (debug)
-dotnet build -f net10.0-windows10.0.19041.0
-dotnet run -f net10.0-windows10.0.19041.0
-
-# lub F5 w Visual Studio / Rider
+# Wystarczy otworzyć index.html w przeglądarce (dwuklik),
+# albo użyć VS Code + rozszerzenie "Live Server",
+# albo prostego lokalnego serwera:
+npx http-server -p 8080
 ```
+Brak `dotnet build`, brak kroku kompilacji — to statyczna strona.
 
-## Znane ograniczenia
-- Ostrzeżenie NU1903 (SQLitePCLRaw vulnerability) — niegroźne dla lokalnej app
-- `DisplayAlert` deprecated w .NET 10 — używamy `DisplayAlertAsync`
+## Hosting (GitHub Pages)
+Po wypchnięciu zmian na `main`: Settings → Pages → Source: "Deploy from a branch" → branch `main`, folder `/ (root)` → Save. Strona pod `https://gdzietusens.github.io/FlagsTrainer/`.
